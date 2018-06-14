@@ -21,6 +21,7 @@ const StudentSchema=mongoose.Schema({
     Fees:Number,
     No_of_Sub:Number,
     Name_ofSubjects:String,
+    password:String,
     });
     module.exports=mongoose.model('Student',StudentSchema);
     

@@ -6,6 +6,7 @@ const router =express.Router();
 const FAQ=require('../models/FAQ');
 const User=require('../models/user');
 const Fees=require('../models/Fees')
+const Faculty=require('../models/faculty')
 const Student=require('../models/Student')
 const Registered=require('../models/registered');
 const Marks=require('../models/Marks')
@@ -13,108 +14,134 @@ const mongoose=require('mongoose');
 const bcrypt=require('bcrypt');
 var dateFormat = require('dateformat');
 
-router.post('/signup',(req, res, next) => {
-    User.find({email: req.body.email})
-      .exec()
-      .then(user => {
-              if (user.length >= 1) {
-                  res.status(409).json({
-                      message: 'Email already exists, try different email'
-                  });
-              } 
-              else{
-     bcrypt.hash(req.body.password,10,(err,hash)=>{
-          if (err) {
-              return res.status(500).json({
-                  error: err
-              });
-          } 
-          else{const parts =req.body.DOb.split("/");
-          const dt = new Date(parseInt(parts[2], 10),
-                            parseInt(parts[1], 10) ,
-                            parseInt(parts[0], 10));
-              const user = new User({
-                  _id: new mongoose.Types.ObjectId(),
-                  email: req.body.email,
-                  password: hash,
-                  first_name: req.body.first_name,
-                  last_name:  req.body.last_name,
-                  DOb:dateFormat(req.body.DOb,"dd/mm/yyyy"),
-                  contact_number: req.body.contact_number
+// router.post('/signup',(req, res, next) => {
+//     User.find({email: req.body.email})
+//       .exec()
+//       .then(user => {
+//               if (user.length >= 1) {
+//                   res.status(409).json({
+//                       message: 'Email already exists, try different email'
+//                   });
+//               } 
+//               else{
+//      bcrypt.hash(req.body.password,10,(err,hash)=>{
+//           if (err) {
+//               return res.status(500).json({
+//                   error: err
+//               });
+//           } 
+//           else{const parts =req.body.DOb.split("/");
+//           const dt = new Date(parseInt(parts[2], 10),
+//                             parseInt(parts[1], 10) ,
+//                             parseInt(parts[0], 10));
+//               const user = new User({
+//                   _id: new mongoose.Types.ObjectId(),
+//                   email: req.body.email,
+//                   password: hash,
+//                   first_name: req.body.first_name,
+//                   last_name:  req.body.last_name,
+//                   DOb:dateFormat(req.body.DOb,"dd/mm/yyyy"),
+//                   contact_number: req.body.contact_number
                  
-              });
-             user.save()
-              .then(result => {
-                  console.log(result);
-                  res.status(201).json({
-                      message: 'You are registeered'
-                  });
-              })
-              .catch(err => {
-                  console.log(err);
-                  res.status(500).json({
-                      error: err
-                  });
-              });
-           }
-      });
-      }
-      });
-  })
+//               });
+//              user.save()
+//               .then(result => {
+//                   console.log(result);
+//                   res.status(201).json({
+//                       message: 'You are registeered'
+//                   });
+//               })
+//               .catch(err => {
+//                   console.log(err);
+//                   res.status(500).json({
+//                       error: err
+//                   });
+//               });
+//            }
+//       });
+//       }
+//       });
+//   })
   
-  router.post('/login',(req,res,next)=>{
-      User.find({email: req.body.email})
-          .exec()
-          .then(user => {
-              if(user.length<=0){
-                  return res.status(401).json({
-                      message: 'Please enter valid email'
-                  });}
-              
-           bcrypt.compare((req.body.password),user[0].password,(err,result)=>{
-                  if(err) {
-                      return res.status(401).json({
-                          message: 'Email or password incorrect'
-                      });
-                  }
-                  if(result){
-                      const token = jwt.sign(
-                          {
-                             email: user[0].email,
-                              id: user[0]._id
-                          },
-                          process.env.JWT_KEY,
-                          {
-                              expiresIn: '1h'
-                          }
-                      );
-                      return  res.status(200).json({
-                          message:'Login successful',
-                          token:token
-                      });
-                  }
-                  res.status(401).json({
-            message:"Email or password incorrect"
-                  });
-                  console.log(result);
-                  
-              });
-      
+router.post('/login',(req,res,next)=>{
+   Student.find({email: req.body.email})
+        .exec()
+        .then(user => {
+            if(user.length<=0){
+                return res.status(401).json({
+                    message: 'Please enter valid email'
+                });}
+            
+         bcrypt.compare((req.body.password),user[0].password,(err,result)=>{
+                if(err) {
+                    return res.status(401).json({
+                        message: 'Username or password incorrect'
+                    });
+                }
+                if(result){
+                    const token = jwt.sign(
+                        {
+                          email: user[0].email,
+                            _id: user[0]._id
+                        },
+                        process.env.JWT_KEY,
+                        {
+                            expiresIn: '2h'
+                        }
+                    );
+                    return  res.status(200).json({
+                        message:'Login successful',
+                        token:token
+                    });
+                }
+                res.status(401).json({
+          message:"Email or password incorrect"
+                });
+                console.log(result);
+                
+            });
+    
+        })
+        .catch(err=>{
+            console.log(err);
+            res.status(500).json({
+                error:err
+            });
+        });
+    
+})
+
+router.get('/result',checkAuth, (req, res, next) => {
+   
+    Marks.find({student_id : req.userData._id}).exec()
+          .then(result => {
+              if (result.length >= 0) {
+                 
+                 Mar=result[0].mar
+                  console.log(Mar);
+                  res.status(200).json(Mar);
+              } else {
+                  res.status(404).json({
+                      message: "No entries found for the ID!"
+                  })
+              }
           })
-          .catch(err=>{
-              console.log(err);
+          .catch(err => {
               res.status(500).json({
-                  error:err
-              });
+                  error:err,
+                message:"something went wrong"});
           });
-      
-   })
-   router.get('/result/:_id', (req, res, next) => {
-    Marks.find({_id:req.params._id}).exec()
+ })
+
+ router.get('/fees',checkAuth, (req, res, next) => {
+    Fees.find({student_id : req.userData._id}).exec()
          .then(result => {
              if (result.length >= 0) {
-                 console.log(result);
-                 res.status(200).json(result);
+                
+                    feesdetail=result[0].FeesPaid
+    
+            
+                 res.status(200).json(feesdetail);
              } else {
                  res.status(404).json({
                      message: "No entries found for the ID!"
@@ -124,23 +151,9 @@ router.post('/signup',(req, res, next) => {
          .catch(err => {
              res.status(500).json(err);
          });
- });
- router.get('/fees/:_id', (req, res, next) => {
-    Fees.find({_id:req.params._id}).exec()
-         .then(result => {
-             if (result.length >= 0) {
-                 console.log(result);
-                 res.status(200).json(result);
-             } else {
-                 res.status(404).json({
-                     message: "No entries found for the ID!"
-                 });
-             }
-         })
-         .catch(err => {
-             res.status(500).json(err);
-         });
- });
+})
+
+
    router.post('/register',(req, res, next) => {
     Registered.find({email:req.body.email})
     .exec()
@@ -198,7 +211,21 @@ router.get('/FAQ', function (req, res, next) {
     }).catch(err => {
         res.status(500).json({
             error: err,
-            message:"dccc"
+            message:"Something Went Wrong"
+            
+        });
+    });
+})
+router.get('/faculty', function (req, res, next) {
+    Faculty.find().exec().then(result => {
+        if (result.length<1) res.status(404).json({
+            message: "No data to display"
+        });
+        else res.status(200).json(result);
+    }).catch(err => {
+        res.status(500).json({
+            error: err,
+            message:"Something Went Wrong"
             
         });
     });

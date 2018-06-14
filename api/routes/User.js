@@ -8,7 +8,6 @@ const Marks=require('../models/Marks')
 const multer = require('multer');
 const Fees=require('../models/Fees')
 const Activities=require('../models/Activities')
-const Faculty=require('../models/faculty')
 const Admin=require('../models/Admin')
 const Registered=require('../models/registered');
 const Student=require('../models/Student');
@@ -25,55 +24,11 @@ const storage = multer.diskStorage({
     }
 });
 const upload = multer({storage: storage});
-//add admin
-router.post('/add',(req, res, next) => {
-    Admin.find({email: req.body.email})
-      .exec()
-      .then(user => {
-              if (user.length >= 1) {
-                  res.status(409).json({
-                      message: 'user already exists, try different name'
-                  });
-              } 
-              else{
-     bcrypt.hash(req.body.password,10,(err,hash)=>{
-          if (err) {
-              return res.status(500).json({
-                  error: err
-              });
-          } 
-          else{
-         
-              const admin = new Admin({
-                  _id: new mongoose.Types.ObjectId(),
-                  email:req.body.email,
-                 Name: req.body.Name,
-                  password: hash,
-                 contact_number:req.body.contact_number,
 
-              });
-             admin.save()
-              .then(result => {
-                  console.log(result);
-                  res.status(201).json({
-                      message: 'You are registeered'
-                  });
-              })
-              .catch(err => {
-                  console.log(err);
-                  res.status(500).json({
-                      error: err
-                  });
-              });
-           }
-      });
-      }
-      });
-  })
   
 // login
 router.post('/login',(req,res,next)=>{
-    Admin.find({email: req.body.email})
+    Admin.find({Username: req.body.Username})
         .exec()
         .then(user => {
             if(user.length<=0){
@@ -90,7 +45,7 @@ router.post('/login',(req,res,next)=>{
                 if(result){
                     const token = jwt.sign(
                         {
-                          email: user[0].email,
+                          Username: user[0].Username,
                             id: user[0]._id
                         },
                         process.env.JWT_KEY,
@@ -120,71 +75,11 @@ router.post('/login',(req,res,next)=>{
     
 })
 
-//view profile
 
-
-router.get('/viewprofile',checkAuth, (req, res, next) => {
- Admin.find({id:req.userData._id})
-        .exec()
-        .then(result => {
-            if(result.length >= 0){
-                res.status(200).json(result);
-            }else {
-                res.status(404).json({
-                    message: "No entries found for the ID!"
-                });
-            }
-        })
-        .catch(err => {
-            res.status(500).json(err);
-        });
-})
-
-
-router.patch('/update/:_id', checkAuth,  (req, res, next) => {
-            
-    Admin.findOneAndUpdate({id: req.body._id}, {$set: {
-        Name: req.body.Name,
-        // Photo: "http://localhost:3000/uploads/" + req.body.Name+req.file.originalname,
-        email: req.body.email,
-        contact_number: req.body.contact_number,
-        
-    }})
-        .exec()
-        .then(result => {console.log("cvjcj")
-
-            res.status(200).json({
-                message: ' Profile updated successfully'
-            });
-        })
-        .catch(err => {
-            console.log("errror");
-            console.log("errror"); 
-            res.status(500).json({
-                error: err
-            });
-        });
-
-});
-
-
-//remove Admin
-
-router.delete('/removeadmin',checkAuth, function (req, res, next) {
-    Admin.findOneAndRemove({ Username: req.body.Username,password:req.body.password})
-          .exec()
-          .then(result => {
-          
-              res.status(200).json(result);
-          })
-          .catch(err => {
-              res.status(500).json(err);
-          });
-  })
 
 //faq post
 router.post('/FAQ',checkAuth,(req, res, next) => {
-    
+    console.log(req.headers)
     const faq = new FAQ({
         _id: new mongoose.Types.ObjectId(),
         Questions:req.body.Questions,
@@ -275,92 +170,8 @@ router.delete('/deleteFAQ/:_id',checkAuth, function (req, res, next) {
         });
 })
 
-// view registered
-router.get('/registered',checkAuth,  (req, res, next) =>{
-    Registered.find().exec().then(result => {
-        if (!result.length) res.status(404).json({
-            message: "No data to display"
-        });
-        else res.status(200).json(result);
-    }).catch(err => {
-        res.status(500).json({
-            error: err,
-            message:"Something went wrong Internal Error"
-        });
-    });
-})
 
-// delete after confirm in registration
-router.delete('/remove/:_id',checkAuth, function (req, res, next) {
-  Registered.findOneAndRemove({ _id: req.params._id })
-        .exec()
-        .then(result => {
-        
-            res.status(200).json(result);
-        })
-        .catch(err => {
-            res.status(500).json(err);
-        });
-})
 
-// confirm student admission
-router.post('/confirmstudent', (req, res, next) => {
-    Student.find({email: req.body.email})
-        .exec()
-        .then(data => {
-                if (data.length >= 1) {
-                    res.status(409).json({
-                        message: 'Student email already exists, try different email'
-                    });
-                } else {
-                    bcrypt.hash(req.body.password, 10, (err, hashed_pass) => {
-                        if (err) {
-                            return res.status(500).json({
-                                error: err,
-                                message:"Xcxcxc"
-                            });
-                        } else {
-                            const student = new Student({
-                                _id: new mongoose.Types.ObjectId(),
-                                Student_name: req.body.Student_name,
-                                Father_name:req.body.Father_name,
-                                Mother_name:req.body. Mother_name,
-                                Father_occupation:req.body.Father_occupation,
-                                Mother_occupation:req.body.Mother_occupation,
-                                father_contact_number:req.body.father_contact_number,
-                                mother_contact_number:req.body.mother_contact_number,
-                                School_name:req.body.School_name,
-                                Sibling_name:req.body.Sibling_name,
-                                Class:req.body.Class,
-                                email:req.body.email,
-                                Gender:req.body.Gender,
-                                DOb:req.body.DOb,
-                                Address:req.body.Address,
-                                No_of_Sub:req.body.No_of_Sub,
-                                Name_ofSubjects:req.body.Name_ofSubjects,
-                                Sibling:req.body.Sibling,
-                                Fees:req.body.Fees,
-                                password:hashed_pass 
-                            });
-                            student.save()
-                                .then(result => {
-                                    console.log(result);
-                                    res.status(201).json({
-                                        message: 'User created'
-                                    });
-                                })
-                                .catch(err => {
-                                    console.log(err);
-                                    res.status(500).json({
-                                        error: err
-                                    });
-                                });
-                        }
-                    });
-                }
-            }
-        );
-})
 
 //view registerd for confirmation and entering fees
 router.get('/view/:_id',checkAuth, (req, res, next) => {
@@ -400,7 +211,7 @@ router.get('/studentdetail/:_id',checkAuth, (req, res, next) => {
 })
 
 //post result for particular student
-router.post('/result/:student_id',(req, res, next) => {
+router.post('/result/:student_id',checkAuth,(req, res, next) => {
     Marks.find({student_id:req.params.student_id})
         .exec()
         .then(data=>{
@@ -484,7 +295,7 @@ router.get('/resultget/:student_id',checkAuth, (req, res, next) => {
  })
 
 // post particular student fees detail 
-router.post('/Fees/:student_id',(req, res, next) => {
+router.post('/Fees/:student_id',checkAuth,(req, res, next) => {
     Fees.find({student_id:req.params.student_id})
         .exec()
         .then(data=>{
@@ -594,28 +405,7 @@ router.post('/class',checkAuth, function (req, res, next) {
         });
     });
 })
-//add faculty
 
-router.post('/faculty',upload.single('Faculty_Photo'),function (req, res, next) {
-    const faculty = new Faculty({
-        _id: new mongoose.Types.ObjectId(),
-      Faculty:req.body.Faculty,
-      Faculty_Qualification:req.body.Faculty_Qualification,
-     Faculty_Photo: "http://localhost:3000/uploads/"+ req.file.originalname
-    })
-   faculty.save().then(result => {
-       console.log(result)
-        res.status(200).json({
-            message: "Data Inserted Successfully!",
-        });
-    })
-        .catch(err => {
-            res.status(500).json({
-                error: err,
-                message:"OOPS!!Something went wrong"
-        });
-    });
-})
 //
 router.get('/phot', function (req, res, next) {
    Activities.find().exec().then(result => {
@@ -623,8 +413,7 @@ router.get('/phot', function (req, res, next) {
             message: "No data to display"
         });
         else {
-            
-            
+            console.log(result)
             res.status(200).json(
             result);}
     }).catch(err => {
@@ -634,22 +423,7 @@ router.get('/phot', function (req, res, next) {
         });
     });
 })
-router.get('/photo/:_id',(req, res, next) => {
-    Activities.find({_id : req.params._id})
-        .exec()
-        .then(result => {
-            if(result.length >= 0){
-                res.status(200).json(result);
-            }else {
-                res.status(404).json({
-                    message: "No entries found for the ID!"
-                });
-            }
-        })
-        .catch(err => {
-            res.status(500).json(err);
-        });
-})
+
 // router.post('/activity',upload.array('Photos'),(req, res, next) => {
 //     console.log(req.file)
 //     var photo= [];
@@ -719,7 +493,6 @@ router.post('/activity',upload.single('Photos'),(req, res, next) => {
         })
     
 })
-
 router.get('/photos/:id', (req, res, next) => {
     Activities.find({_id:req.params._id}).exec()
          .then(result => {
