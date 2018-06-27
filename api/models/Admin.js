@@ -17,8 +17,8 @@ const adminSchema = mongoose.Schema({
     required:true,
     match: /^[0-9]$/},
 
-    // admin_resetPasswordToken : String,
-    // admin_resetPasswordExpires : String
+    admin_resetPasswordToken : String,
+    admin_resetPasswordExpires : String
 });
 
 module.exports =  mongoose.model('Admin', adminSchema);

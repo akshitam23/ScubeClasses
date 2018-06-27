@@ -30,7 +30,8 @@ const RegisteredSchema=mongoose.Schema({
             Address: {type:String,requied:true},
             Class: {type:Number,requied:true},
             No_of_Sub:{type:Number,requied:true},
-            Name_ofSubjects:[]
+            Name_ofSubjects:[],
+            Board:String
 
     });
     module.exports=mongoose.model('Registered',RegisteredSchema);

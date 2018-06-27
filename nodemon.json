@@ -1,6 +1,7 @@
 {
     "env":
     {
-    "JWT_KEY":"abcd"
+    "JWT_KEY":"abcd",
+    "GMAILPW":"scubeclass"
 }
 }

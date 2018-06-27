@@ -13,7 +13,6 @@ const StudentSchema=mongoose.Schema({
     Sibling_name:String,
     Class:Number,
     Sibling:String,
-    Password:String,
     email:String,
     DOb:String,
     Gender:String,
@@ -22,6 +21,9 @@ const StudentSchema=mongoose.Schema({
     No_of_Sub:Number,
     Name_ofSubjects:String,
     password:String,
+    Photo:String,
+    Board:String,
+    student_resetPasswordToken : String,
+    student_resetPasswordExpires : String
     });
     module.exports=mongoose.model('Student',StudentSchema);
-    

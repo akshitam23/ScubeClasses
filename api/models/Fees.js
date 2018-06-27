@@ -6,7 +6,7 @@ const FeesSchema=mongoose.Schema({
     Student_name:{type:String,required:true},    
     Fees:Number,
     FeesPaid:[{
-       
+       Cheque_No:String,
     HowMuch:Number,
     date:String,
     FeesLeft:Number,

@@ -1,3 +1,5 @@
+
+
 const mongoose =  require('mongoose');
 
 const FacultySchema=mongoose.Schema({
@@ -7,4 +9,3 @@ const FacultySchema=mongoose.Schema({
     Faculty_Photo:String
     });
     module.exports=mongoose.model('Faculty',FacultySchema);
-    
