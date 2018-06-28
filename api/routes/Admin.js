@@ -714,7 +714,75 @@ router.post('/result/:student_id',checkAuth,(req, res, next) => {
         })
     
 })
-
+//send marks
+router.post('/sendmarks/:_id', function (req, res, next) {
+    const dd= req.body. ExamDate.slice(0,2)
+                const mm=req.body. ExamDate.slice(2,4)
+                const yy=req.body. ExamDate.slice(4,8)
+    async.waterfall([
+        function (done) {
+            crypto.randomBytes(20, function (err, buf) {
+                var token = buf.toString('hex');
+                done(err, token);
+            });
+        },
+        function (token, done) {
+            Student.findOne({_id:req.params._id}, function (err, user) {
+                if (!Admin) {
+                    req.status('Error', 'No account with that email address exists');
+                    // res.status(200).json({message:'Error! No account with that email address exists'});
+                    return res.redirect('/sendmarks');
+                    
+                }
+                console.log(user)
+                if(user!=null){
+                user.save(function (err) {
+                   //  res.status(200).json({message:'Error! No account with that email address exists'});
+                    done(err, token, user);
+                });
+         }
+        else{
+        // res.status(200).json({message:'Error! EMail and contact number doesnot match'});
+        res.end();
+        } });
+        },
+        function (token, user, done) {
+            var transport = nodemailer.createTransport(smtpTransport({
+                host: 'localhost',
+                port: 3000,
+                secure: 'false',
+                service: 'Gmail',
+                auth: {
+                    user: 'scubeclasse@gmail.com',
+                    pass: 'scubeclass'
+                },
+                tls: {
+                    rejectUnauthorized: false
+                }
+            }));
+            var mailOptions = {
+                to: user.email,
+                from: 'scubeclasse@gmail.com',
+                subject: 'Student report',
+                text:   user.Student_name  + ' has scored '+ req.body.Marks+' out of '+req.body.TotalMarks +
+                  ' in test conducted on '
+                 +dd + "-"+ mm + "-"+ yy +' of chapter ' + req.body.ChapterName + ' in ' + req.body.Subject
+            };
+            transport.sendMail(mailOptions, function (err) {
+                console.log('Mail Sent');
+                console.log('Success An email has been set to ' + user.email + ' with further instructions.');
+               
+                res.status(200).json({message :'An email has been set to ' + user.email});
+                done(err, 'done');
+            });
+        }
+    ], 
+    // function (err) {
+    //     if (err) return next(err);
+    //     res.redirect('/forgotpassword');
+    // }
+);
+});
 //get result of particular student
 router.get('/resultget/:student_id',checkAuth, (req, res, next) => {
     Marks.find({student_id : req.params.student_id}).exec()
@@ -768,7 +836,6 @@ router.post('/Fees/:student_id',checkAuth,(req, res, next) => {
                         })
                     })
             }else{
-                console.log("else");
 
             const FeesPaid  =  data[0].FeesPaid;
            
@@ -800,16 +867,80 @@ router.post('/Fees/:student_id',checkAuth,(req, res, next) => {
         })
     
 })
+//fees mail
+router.post('/sendfees/:_id', function (req, res, next) {
+ 
+    async.waterfall([
+        function (done) {
+            crypto.randomBytes(20, function (err, buf) {
+                var token = buf.toString('hex');
+                done(err, token);
+            });
+        },
+        function (token, done) {
+            Student.findOne({_id:req.params._id}, function (err, user) {
+                if (!Admin) {
+                    req.status('Error', 'No account with that email address exists');
+                    // res.status(200).json({message:'Error! No account with that email address exists'});
+                    return res.redirect('/sendmarks');
+                    
+                }
+                console.log(user)
+                if(user!=null){
+                user.save(function (err) {
+                   //  res.status(200).json({message:'Error! No account with that email address exists'});
+                    done(err, token, user);
+                });
+         }
+        else{
+        // res.status(200).json({message:'Error! EMail and contact number doesnot match'});
+        res.end();
+        } });
+        },
+        function (token, user, done) {
+            var transport = nodemailer.createTransport(smtpTransport({
+                host: 'localhost',
+                port: 3000,
+                secure: 'false',
+                service: 'Gmail',
+                auth: {
+                    user: 'scubeclasse@gmail.com',
+                    pass: 'scubeclass'
+                },
+                tls: {
+                    rejectUnauthorized: false
+                }
+            }));
 
+            var mailOptions = {
+                to: user.email,
+                from: 'scubeclasse@gmail.com',
+                subject: 'Student fee details',
+                text:   user.Student_name  + ' has paid '+ req.body.HowMuch+' on '+Date().slice(4,15)+','+Date().slice(0,4)+' at '+Date().slice(15,25)
+            };
+            transport.sendMail(mailOptions, function (err) {
+                console.log('Mail Sent');
+                console.log('Success An email has been set to ' + user.email + ' with further instructions.');
+               
+                res.status(200).json({message :'An email has been set to ' + user.email});
+                done(err, 'done');
+            });
+        }
+    ], 
+    // function (err) {
+    //     if (err) return next(err);
+    //     res.redirect('/forgotpassword');
+    // }
+);
+});
 //get particular student fees detail  
 router.get('/fees/:student_id',checkAuth, (req, res, next) => {
         Fees.find({student_id : req.params.student_id}).exec()
              .then(result => {
                  if (result.length >= 0) {
-                    console.log(result[0].FeesPaid.length)
                         feesdetail=result[0].FeesPaid
-        
-                     console.log(feesdetail);
+       
+                    
                      res.status(200).json(feesdetail);
                  } else {
                      res.status(404).json({
@@ -821,7 +952,45 @@ router.get('/fees/:student_id',checkAuth, (req, res, next) => {
                  res.status(500).json(err);
              });
 })
-
+router.patch('/editfees/:student_id',checkAuth, (req, res, next) => {
+    Fees.find({student_id : mongoose.Types.ObjectId(req.params.student_id)}).exec()
+    .then(result => {
+        if (result.length >= 0) {
+           console.log(result[0].FeesPaid.length)
+           FeesPaid=result[0].FeesPaid 
+             
+                FeesPaid.pop()
+                console.log(FeesPaid)
+                // FeesPaid.push({
+                //     HowMuch:req.body.HowMuch,
+                //     Cheque_No:req.body.Cheque_No,
+                //     FeesLeft:data[0].FeesPaid[FeesPaid.length-1].FeesLeft-req.body.HowMuch,
+                //     day:Date().slice(0,4),
+                //     time:Date().slice(15,25),
+                //     date:Date().slice(4,15)
+                //     })
+                // console.log(FeesPaid)
+                    Fees.update({student_id:req.params.student_id},{$set: {
+                            FeesPaid:FeesPaid
+                        }}).then(data2=>{
+                            console.log(data2);
+                            
+                            res.status(200).json({message :'success'});
+                    }).catch(error2=>{
+                
+                        res.status(500).json({error: error2});
+                    })
+            
+             } else {
+                 res.status(404).json({
+                     message: "No entries found for the ID!"
+                 });
+             }
+         })
+         .catch(err => {
+             res.status(500).json(err);
+         });
+})
 
 //get all student detail
 router.get('/students',checkAuth, function (req, res, next) {
@@ -1028,75 +1197,7 @@ router.post('/reset', function (req, res) {
     });
 });
 
-//send marks
-router.post('/sendmarks/:_id', function (req, res, next) {
-    const dd= req.body. ExamDate.slice(0,2)
-                const mm=req.body. ExamDate.slice(2,4)
-                const yy=req.body. ExamDate.slice(4,8)
-    async.waterfall([
-        function (done) {
-            crypto.randomBytes(20, function (err, buf) {
-                var token = buf.toString('hex');
-                done(err, token);
-            });
-        },
-        function (token, done) {
-            Student.findOne({_id:req.params._id}, function (err, user) {
-                if (!Admin) {
-                    req.status('Error', 'No account with that email address exists');
-                    // res.status(200).json({message:'Error! No account with that email address exists'});
-                    return res.redirect('/sendmarks');
-                    
-                }
-                console.log(user)
-                if(user!=null){
-                user.save(function (err) {
-                   //  res.status(200).json({message:'Error! No account with that email address exists'});
-                    done(err, token, user);
-                });
-         }
-        else{
-        // res.status(200).json({message:'Error! EMail and contact number doesnot match'});
-        res.end();
-        } });
-        },
-        function (token, user, done) {
-            var transport = nodemailer.createTransport(smtpTransport({
-                host: 'localhost',
-                port: 3000,
-                secure: 'false',
-                service: 'Gmail',
-                auth: {
-                    user: 'scubeclasse@gmail.com',
-                    pass: 'scubeclass'
-                },
-                tls: {
-                    rejectUnauthorized: false
-                }
-            }));
-            var mailOptions = {
-                to: user.email,
-                from: 'scubeclasse@gmail.com',
-                subject: 'Student report',
-                text:   user.Student_name  + ' has scored '+ req.body.Marks+' out of '+req.body.TotalMarks +
-                  ' in test conducted on '
-                 +dd + "-"+ mm + "-"+ yy +' of chapter ' + req.body.ChapterName + ' in ' + req.body.Subject
-            };
-            transport.sendMail(mailOptions, function (err) {
-                console.log('Mail Sent');
-                console.log('Success An email has been set to ' + user.email + ' with further instructions.');
-               
-                res.status(200).json({message :'An email has been set to ' + user.email});
-                done(err, 'done');
-            });
-        }
-    ], 
-    // function (err) {
-    //     if (err) return next(err);
-    //     res.redirect('/forgotpassword');
-    // }
-);
-});
+
    
 
 module.exports =router;

@@ -22,7 +22,7 @@ const crypto = require('crypto');
 
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
-        cb(null, './uploads');
+        cb(null, './uploads/student');
     },
     filename: function(req, file, cb){
         cb(null, file.originalname);
@@ -322,7 +322,8 @@ router.get('/viewprofile',checkAuth, (req, res, next) => {
             
     Student.findOneAndUpdate({_id: req.userData._id}, {$set: {
     Student_name: req.body.Student_name,
-    Photo: "http://localhost:3000/uploads/"+req.file.originalname,
+
+    Photo: "http://localhost:3000/uploads/student"+req.file.originalname+req.body.Student_name,
     father_contact_number: req.body.father_contact_number,
      Father_name:req.body.Father_name,
      Father_occupation:req.body.Father_occupation,
@@ -335,11 +336,10 @@ router.get('/viewprofile',checkAuth, (req, res, next) => {
      DOb:req.body.DOb,
      Sibling:req.body.Sibling,
      Sibling_name:req.body.Sibling_name,
-     Address:req.body.Address,
-        
+     Address:req.body.Address,     
     }})
         .exec()
-        .then(result => {console.log("cvjcj")
+        .then(result => {
 
             res.status(200).json({
                 message: ' Profile updated successfully'
